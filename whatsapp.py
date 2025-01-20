@@ -6,15 +6,14 @@ def mesaj_gonder(isim, mesaj):
         numara = get_numara(isim)
         
         if numara:
-            # WhatsApp Web üzerinden mesaj göndermeyi başlatıyoruz
             kit.sendwhatmsg_instantly(
                 phone_no="+90" + numara,
                 message=mesaj,
-                wait_time=5  # Açılma ve mesaj gönderim süresi 5 saniyeye düşürüldü
+                wait_time=5  
             )
             
-            pyautogui.sleep(5)  # Mesajın gönderilmesini beklemek için süre
-            pyautogui.press('enter')  # Mesajı göndermek için Enter'a basıyoruz
+            pyautogui.sleep(5) 
+            pyautogui.press('enter') 
             print(f"Mesaj gönderildi: {isim} ({numara}) -> {mesaj}")
         else:
             print(f"Kişi bulunamadı: {isim}")
@@ -25,10 +24,7 @@ def mesaj_gonder(isim, mesaj):
 
 def get_numara(isim):
     telefon_rehberi = {
-        "yalçın durmuş": "5324045750",
-        "beyza": "5537744761",
-        "selma": "5434463773",
-        "şimal": "5550373353"
+       
     }
 
     isim = isim.lower()  # İsim küçük harfe çevriliyor
