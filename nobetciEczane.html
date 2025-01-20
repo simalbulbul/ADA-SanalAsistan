@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nöbetçi Eczaneler</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #e9f7ef; 
+        }
+        header {
+            background: linear-gradient(90deg, #4CAF50, #81c784);
+            color: white;
+            padding: 20px 10px;
+            text-align: center;
+            font-size: 1.5em;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 1s ease-in-out;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #388e3c;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #81c784;
+            border-radius: 4px;
+            background: #e8f5e9;
+            color: #388e3c;
+            font-size: 1em;
+            outline: none;
+            transition: border 0.3s;
+        }
+        select:focus {
+            border-color: #4CAF50;
+        }
+        button {
+            background: linear-gradient(90deg, #388e3c, #81c784);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.3s, background 0.3s;
+        }
+        button:hover {
+            transform: scale(1.05);
+            background: linear-gradient(90deg, #2e7d32, #66bb6a);
+        }
+        .pharmacy {
+            border-bottom: 1px solid #e0e0e0;
+            padding: 15px 0;
+            animation: slideIn 0.5s ease-in-out;
+        }
+        .pharmacy:last-child {
+            border-bottom: none;
+        }
+        #loading {
+            display: none;
+            text-align: center;
+            margin: 20px;
+        }
+        .spinner {
+            border: 4px solid #e0e0e0;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Nöbetçi Eczaneler</h1>
+    </header>
+    <div class="container">
+        <div class="form-group">
+            <label for="city">Şehir:</label>
+            <select id="sehir" onchange="semtleriGuncelle()">
+                <option value="">Şehir Seçin</option>
+                <option value="Istanbul">İstanbul</option>
+                <option value="Ankara">Ankara</option>
+                <option value="Izmir">İzmir</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="district">Semt:</label>
+            <select id="semt">
+                <option value="">Önce şehir seçin</option>
+            </select>
+        </div>
+        <button onclick="eczaneleriGetir()">Eczaneleri Göster</button>
+        <div id="loading">
+            <div class="spinner"></div>
+            <p>Lütfen bekleyin...</p>
+        </div>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const sehreGoreSemtler = {
+            Istanbul: ["Kadıköy", "Üsküdar", "Beşiktaş", "Şişli"],
+            Ankara: ["Çankaya", "Keçiören", "Yenimahalle", "Altındağ"],
+            Izmir: ["Konak", "Karşıyaka", "Bornova", "Buca"]
+        };
+
+        function semtleriGuncelle() {
+            const sehir = document.getElementById('sehir').value;
+            const semtSecimi = document.getElementById('semt');
+
+            semtSecimi.innerHTML = '<option value="">Semt Seçin</option>';
+
+            if (sehreGoreSemtler[sehir]) {
+                sehreGoreSemtler[sehir].forEach(semt => {
+                    const option = document.createElement('option');
+                    option.value = semt;
+                    option.textContent = semt;
+                    semtSecimi.appendChild(option);
+                });
+            }
+        }
+
+        async function eczaneleriGetir() {
+            const sehir = document.getElementById('sehir').value;
+            const semt = document.getElementById('semt').value;
+
+            if (!sehir) {
+                alert('Lütfen şehir seçin!');
+                return;
+            }
+
+            const apiKey = 'apikey 4MeFuspxwUPG5uZjdiuapW:7k03iZFBCed45wHsO6IMYu'; // API anahtarınızı buraya girin
+            const apiUrl = `https://api.collectapi.com/health/dutyPharmacy?il=${sehir}${semt ? `&ilce=${semt}` : ''}`;
+
+            try {
+                document.getElementById('loading').style.display = 'block';
+                const response = await fetch(apiUrl, {
+                    headers: {
+                        'content-type': 'application/json',
+                        'authorization': `apikey ${apiKey}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Veri alınamadı, lütfen API anahtarınızı kontrol edin.');
+                }
+
+                const data = await response.json();
+                eczaneleriGoster(data.result);
+            } catch (error) {
+                console.error(error);
+                alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function eczaneleriGoster(eczaneler) {
+            const sonucDiv = document.getElementById('results');
+            sonucDiv.innerHTML = '';
+
+            if (eczaneler.length === 0) {
+                sonucDiv.innerHTML = '<p>Hiç nöbetçi eczane bulunamadı.</p>';
+                return;
+            }
+
+            eczaneler.forEach(eczane => {
+                const eczaneDiv = document.createElement('div');
+                eczaneDiv.className = 'pharmacy';
+                eczaneDiv.innerHTML = `
+                    <h3>${eczane.name}</h3>
+                    <p><strong>Adres:</strong> ${eczane.address}</p>
+                    <p><strong>Telefon:</strong> <a href="tel:${eczane.phone}">${eczane.phone}</a></p>
+                `;
+                sonucDiv.appendChild(eczaneDiv);
+            });
+        }
+    </script>
+</body>
+</html>

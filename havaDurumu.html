@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hava Durumu</title>
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #6dd5ed, #2193b0);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .weather-container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 800px;
+            animation: fadeIn 1s ease-in-out;
+        }
+        .weather-container h1 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #0056b3;
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
+        }
+        .weather-container input {
+            padding: 12px;
+            width: calc(100% - 24px);
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .weather-container button {
+            padding: 12px 25px;
+            background: #2193b0;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s, transform 0.2s;
+        }
+        .weather-container button:hover {
+            background: #176b8a;
+            transform: scale(1.05);
+        }
+        .weather-details {
+            margin-top: 20px;
+            font-size: 16px;
+        }
+        .weather-details p {
+            margin: 5px 0;
+        }
+        .weather-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between; /* Öğeleri yatayda dağıtır */
+        }
+        .weather-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-evenly;
+            background: #f9f9f9;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin: 10px;
+            padding: 15px;
+            width: 180px;
+            text-align: center;
+        }
+        .weather-item img {
+            width: 50px;
+            height: 50px;
+        }
+        #loading {
+            display: none;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="weather-container">
+        <h1>Hava Durumu</h1>
+        <input type="text" id="city" placeholder="Şehir adı girin">
+        <button onclick="getWeather()">Hava Durumunu Göster</button>
+        <div id="loading">
+            <div class="spinner"></div>
+            <p>Yükleniyor...</p>
+        </div>
+        <div class="weather-details" id="weatherDetails"></div>
+    </div>
+
+    <script>
+        async function getWeather() {
+            const city = document.getElementById('city').value;
+            const apiKey = 'apikey 4MeFuspxwUPG5uZjdiuapW:7k03iZFBCed45wHsO6IMYu'; // API anahtarınız
+            const url = `https://api.collectapi.com/weather/getWeather?data.lang=tr&data.city=${city}`;
+
+            const loadingElement = document.getElementById('loading');
+            const detailsElement = document.getElementById('weatherDetails');
+
+            loadingElement.style.display = 'block';
+            detailsElement.innerHTML = '';
+
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'authorization': `apikey ${apiKey}`,
+                        'content-type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('API isteği başarısız oldu');
+                }
+
+                const data = await response.json();
+                const weatherList = data.result;
+
+                let html = `<p><strong>${city}</strong> şehri için 5 günlük hava durumu:</p>`;
+                html += `<div class="weather-list">`;  // Weather listesine başlangıç etiketi
+
+                weatherList.forEach((day, index) => {
+                    if (index < 5) { // İlk 5 gün
+                        const iconUrl = getWeatherIcon(day.description);
+                        html += `
+                            <div class="weather-item">
+                                <p><strong>Gün:</strong> ${day.date}</p>
+                                <p><strong>Durum:</strong> ${day.description}</p>
+                                <p><strong>Sıcaklık:</strong> ${day.degree}°C</p>
+                                <img src="${iconUrl}" alt="Hava durumu">
+                            </div>
+                        `;
+                    }
+                });
+
+                html += `</div>`;  
+                detailsElement.innerHTML = html;
+            } catch (error) {
+                detailsElement.innerHTML = `<p>Hata: ${error.message}</p>`;
+            } finally {
+                loadingElement.style.display = 'none';
+            }
+        }
+
+        function getWeatherIcon(description) {
+            if (description.includes('güneş')) {
+                return 'https://cdn-icons-png.flaticon.com/512/1163/1163661.png'; // guneş
+            } else if (description.includes('yağmur')) {
+                return 'https://cdn-icons-png.flaticon.com/512/1163/1163629.png'; // yagmur
+            } else if (description.includes('kar')) {
+                return 'https://cdn-icons-png.flaticon.com/512/1163/1163635.png'; // kar
+            } else {
+                return 'https://cdn-icons-png.flaticon.com/512/1163/1163637.png'; // bulutlu
+            }
+        }
+    </script>
+</body>
+</html>
